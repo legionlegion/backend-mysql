@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT;
 
 // CORS must come BEFORE helmet
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:5173'];
 
@@ -48,20 +48,29 @@ app.use('/api/requests', requestRoutes);
 // Export app for testing
 export default app;
 
-// Only start server if not in test environment
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`DBS Backend at Port ${PORT}`)
-  })
-
-  // Handle uncaught errors
-  process.on('uncaughtException', (error) => {
-    console.error('UNCAUGHT EXCEPTION:', error);
-    process.exit(1);
+app.use((err, req, res, next) => {
+  console.error("!!! GLOBAL ERROR CAUGHT !!!");
+  console.error("Message:", err.message);
+  console.error("Stack:", err.stack);
+  res.status(500).json({
+    success: false,
+    error: err.message,
+    tip: "Check Railway logs now!"
   });
+});
 
-  process.on('unhandledRejection', (reason, promise) => {
-    console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
-    process.exit(1);
-  });
-}
+
+app.listen(PORT, () => {
+  console.log(`DBS Backend at Port ${PORT}`)
+})
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('UNCAUGHT EXCEPTION:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  process.exit(1);
+});
