@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../config/database.js';
 import * as models from '../models/models.js';
+import { logError, formatDbError } from '../utils/logger.js';
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -72,7 +73,11 @@ export const register = async (req, res) => {
       accessToken
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    logError('register', error, { body: req.body });
+    res.status(500).json({ 
+      message: 'Registration failed',
+      error: formatDbError(error)
+    });
   }
 };
 

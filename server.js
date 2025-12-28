@@ -31,8 +31,7 @@ app.use(cookieParser());
 
 // Log all incoming requests
 app.use((req, res, next) => {
-  // console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  // console.log('Headers:', req.headers);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   console.log('Body:', req.body);
   next();
 });
@@ -45,19 +44,25 @@ app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/requests', requestRoutes);
 
-// Export app for testing
-export default app;
-
+// Global error handler (must be AFTER routes)
 app.use((err, req, res, next) => {
-  console.error("!!! GLOBAL ERROR CAUGHT !!!");
-  console.error("Message:", err.message);
-  console.error("Stack:", err.stack);
-  res.status(500).json({
+  console.error("!!! GLOBAL ERROR HANDLER !!!");
+  console.error("Time:", new Date().toISOString());
+  console.error("Request:", req.method, req.url);
+  console.error("Error Message:", err.message);
+  console.error("Error Stack:", err.stack);
+  console.error("Error Code:", err.code);
+  console.error("Error SQL:", err.sql);
+  
+  res.status(err.status || 500).json({
     success: false,
-    error: err.message,
-    tip: "Check Railway logs now!"
+    error: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 });
+
+// Export app for testing
+export default app;
 
 
 app.listen(PORT, () => {
